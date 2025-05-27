@@ -3,7 +3,7 @@ import logging
 import requests
 import psycopg2
 from typing import Optional, Dict, Any, Tuple
-from sales_bot.config import get_settings
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
