@@ -6,8 +6,8 @@ import json
 import logging
 import asyncio
 from typing import Dict, Any, Optional
-from sales_bot.config import get_settings
-from sales_bot.ghl_api import GHLAPI, GHLClient
+from config import get_settings
+from ghl_api import GHLAPI, GHLClient
 
 # Configure logging
 logging.basicConfig(
