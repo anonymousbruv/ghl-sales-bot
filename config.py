@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     GHL_CLIENT_SECRET: str = Field(..., description="GHL OAuth Client Secret")
     GHL_REDIRECT_URI: str = Field(..., description="GHL OAuth Redirect URI")
     
-    # Supabase Settings
-    SUPABASE_DB_URL: str = Field(..., description="Supabase Database URL")
+    # Database Settings
+    SUPABASE_DB_URL: str = Field(..., description="Database URL")
     
     # Logging Settings
     LOG_LEVEL: str = Field(default="INFO", description="Logging Level")
@@ -37,11 +37,12 @@ class Settings(BaseSettings):
         return v
         
     @validator("SUPABASE_DB_URL")
-    def validate_supabase_url(cls, v):
+    def validate_db_url(cls, v):
         if not v:
             raise ValueError("SUPABASE_DB_URL is required")
-        if not v.startswith("postgresql://"):
-            raise ValueError("SUPABASE_DB_URL must be a valid PostgreSQL connection string")
+        # Accept both PostgreSQL and Railway internal URLs
+        if not (v.startswith("postgresql://") or v.startswith("${{ Postgres.postgres.railway.internal}}")):
+            raise ValueError("SUPABASE_DB_URL must be a valid database connection string")
         return v
         
     class Config:

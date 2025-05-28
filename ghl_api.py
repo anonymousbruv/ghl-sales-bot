@@ -4,9 +4,26 @@ import requests
 import psycopg2
 from typing import Optional, Dict, Any, Tuple
 from config import get_settings
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+def parse_db_url(db_url: str) -> dict:
+    """Parse database URL into connection parameters"""
+    # Handle Railway internal URL format
+    if db_url.startswith("${{ Postgres.postgres.railway.internal}}"):
+        # Extract the actual connection string from the Railway format
+        db_url = db_url.replace("${{ Postgres.postgres.railway.internal}}", "")
+    
+    parsed = urlparse(db_url)
+    return {
+        'dbname': parsed.path[1:],
+        'user': parsed.username,
+        'password': parsed.password,
+        'host': parsed.hostname,
+        'port': parsed.port or 5432
+    }
 
 class GHLAPI:
     def __init__(self):
@@ -31,7 +48,9 @@ class GHLAPI:
     def get_tokens(self) -> Tuple[str, str]:
         """Get current tokens from Supabase"""
         try:
-            conn = psycopg2.connect(settings.SUPABASE_DB_URL)
+            # Parse connection parameters from URL
+            conn_params = parse_db_url(settings.SUPABASE_DB_URL)
+            conn = psycopg2.connect(**conn_params)
             cur = conn.cursor()
             cur.execute("SELECT access_token, refresh_token FROM tokens ORDER BY updated_at DESC LIMIT 1;")
             tokens = cur.fetchone()
@@ -52,7 +71,9 @@ class GHLAPI:
     def update_tokens(self, new_access_token: str, new_refresh_token: str):
         """Update tokens in Supabase"""
         try:
-            conn = psycopg2.connect(settings.SUPABASE_DB_URL)
+            # Parse connection parameters from URL
+            conn_params = parse_db_url(settings.SUPABASE_DB_URL)
+            conn = psycopg2.connect(**conn_params)
             cur = conn.cursor()
             cur.execute(
                 "UPDATE tokens SET access_token=%s, refresh_token=%s, updated_at=NOW() WHERE id=1;",
